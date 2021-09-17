@@ -79,9 +79,12 @@
 			t *tempData = (t *)realloc(ap->data, sizeof(t) * ap->capacity);		\
 			ap->data = tempData;												\
 		}																		\
-		ap->frontIndex = (ap->frontIndex + 1) % ap->capacity;					\
-		ap->at(ap, ap->frontIndex) = item;										\
-		ap->s++;																\
+		else																	\
+		{																		\
+			ap->frontIndex = (ap->frontIndex + 1) % ap->capacity;				\
+			ap->at(ap, ap->frontIndex) = item;									\
+			ap->s++;															\
+		}																		\
 	}																			\
 	void Deque_##t##_push_back(Deque_##t *ap, t item)							\
 	{																			\
@@ -97,14 +100,49 @@
 			t *tempData = (t *)realloc(ap->data, sizeof(t) * ap->capacity);		\
 			ap->data = tempData;												\
 		}																		\
-		ap->backIndex = (ap->backIndex - 1 + ap->capacity) % ap->capacity;		\
-		ap->at(ap, ap->backIndex) = item;										\
-		ap->s++;																\
+		else																	\
+		{																		\
+			ap->backIndex = (ap->backIndex - 1 + ap->capacity) % ap->capacity;	\
+			ap->at(ap, ap->backIndex) = item;									\
+			ap->s++;															\
+		}																		\
 	}																			\
-	void Deque_##t##_pop_front(Deque_##t *ap)
-	{
-
-	}
+	void Deque_##t##_pop_front(Deque_##t *ap)									\
+	{																			\
+		if(ap->empty(ap))														\
+		{																		\
+			printf("Empty deque\n");											\
+			abort();															\
+		}																		\
+		else if(ap->frontIndex == ap->backIndex)								\
+		{																		\
+			ap->frontIndex = ap->backIndex = 0;									\
+			ap->s--;															\
+		}																		\
+		else																	\
+		{																		\
+			ap->frontIndex = (ap->frontIndex - 1 + ap->capacity) % ap->capacity;\
+			ap->s--;															\
+		}																		\
+	}																			\
+	void Deque_##t##_pop_back(Deque_##t *ap)									\
+	{																			\
+		if(ap->empty(ap))														\
+		{																		\
+			printf("Empty deque\n");											\
+			abort();															\
+		}																		\
+		else if(ap->frontIndex == ap->backIndex)								\
+		{																		\
+			ap->frontIndex = ap->backIndex = 0;									\
+			ap->s--;															\
+		}																		\
+		else																	\
+		{																		\
+			ap->backIndex = (ap->backIndex + 1) % ap->capacity;					\
+			ap->s--;															\
+		}																		\
+	}																			\
 	void Deque_##t##_ctor(Deque_##t *ap, bool (*compFunc)(const t &o1, const t &o2))	\
 	{																					\
 		ap->data = (t *)malloc(sizeof(t) * ap->capacity);								\

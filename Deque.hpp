@@ -90,7 +90,6 @@
 		ap->full = &Deque_##t##_full;													\
 		ap->push_back = &Deque_##t##_push_back;											\
 		ap->push_front = &Deque_##t##_push_front;										\
-
 	}																					\
 
 #endif

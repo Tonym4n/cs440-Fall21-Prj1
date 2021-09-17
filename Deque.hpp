@@ -1,6 +1,8 @@
 #ifndef DEQUE_HPP
 #define DEQUE_HPP
 
+#include <algorithm>
+
 #define Deque_DEFINE(t)															\
 	struct Deque_##t;															\
 	struct Deque_##t##_Iterator													\
@@ -31,6 +33,7 @@
 		void (*pop_front)(Deque_##t *);											\
 		void (*pop_back)(Deque_##t *);											\
 		void (*clear)(Deque_##t *);												\
+		void (*sort)(Deque_##t *, Deque_##t##_Iterator, Deque_##t##_Iterator);	\
 																				\
 		Deque_##t##_Iterator (*begin)(Deque_##t *);								\
 		Deque_##t##_Iterator (*end)(Deque_##t *);								\
@@ -150,23 +153,33 @@
 	}																			\
 	void Deque_##t##_clear(Deque_##t *ap)										\
 	{																			\
-		free(ap->data);															\
+		ap->s = 0;																\
+		ap->capacity = 10;														\
+		ap->frontIndex = ap->backIndex = -1;									\
 	}																			\
 	void Deque_##t##_dtor(Deque_##t *ap)										\
 	{																			\
-		/*???*/																	\
+		free(ap->data);															\
 	}																			\
 	void Deque_##t##_Iterator_inc(Deque_##t##_Iterator *itp)					\
 	{																			\
-		itp->counter++;															\
+		if(itp->counter >= 0)													\
+			itp->counter++;														\
 	}																			\
 	void Deque_##t##_Iterator_dec(Deque_##t##_Iterator *itp)					\
 	{																			\
-		itp->counter--;															\
+		if(itp->counter <= itp->ap->s)											\
+			itp->counter--;														\
 	}																			\
 	t Deque_##t##_Iterator_deref(Deque_##t##_Iterator *itp)						\
 	{																			\
-		return itp->ap->at(itp->ap, itp->counter);								\
+		if(itp->counter >= itp->ap->s)											\
+		{																		\
+			printf("Attempt to deref invalid index\n");							\
+			abort();															\
+		}																		\
+		else																	\
+			return itp->ap->at(itp->ap, itp->counter);							\
 	}																			\
 	Deque_##t##_Iterator Deque_##t##_begin(Deque_##t *ap)						\
 	{																			\
@@ -187,9 +200,34 @@
 	}																			\
 	bool Deque_##t##_Iterator_equal(Deque_##t##_Iterator first, Deque_##t##_Iterator second)	\
 	{																			\
-		if(abs(first.counter) == abs(second.counter))							\
+		if(first.counter == second.counter)										\
 			return true;														\
 		return false;															\
+	}																			\
+	void Deque_##t##_sort(Deque_##t *ap, Deque_##t##_Iterator start, Deque_##t##_Iterator finish)					\
+	{																												\
+		start.inc(&start);																							\
+		for(auto it = start; !Deque_##t##_Iterator_equal(it, finish); it.inc(&it))									\
+		{																											\
+			Deque_##t##_Iterator itMinusOne = it;																	\
+			itMinusOne.dec(&itMinusOne);																			\
+			if(ap->compFunc(itMinusOne.deref(&itMinusOne), it.deref(&it)) == false)									\
+			{																										\
+				std::swap(itMinusOne.ap->at(itMinusOne.ap, itMinusOne.counter) , it.ap->at(it.ap, it.counter));		\
+			}																										\
+		}																											\
+	}																												\
+	bool Deque_##t##_equal(Deque_##t one, Deque_##t two)						\
+	{																			\
+		for(auto itOne = one.begin(&one), itTwo = two.begin(&two);				\
+			!Deque_##t##_Iterator_equal(itOne, one.end(&one)) && !Deque_##t##_Iterator_equal(itTwo, two.end(&two));	\
+			itOne.inc(&itOne), itTwo.inc(&itTwo))								\
+		{																		\
+			if(itOne.deref(&itOne) != itTwo.deref(&itTwo))						\
+				return false;													\
+		}																		\
+		return (one.capacity == two.capacity) && (one.s == two.s) &&			\
+				(strcmp(one.type_name, two.type_name) == 0);					\
 	}																			\
 	void Deque_##t##_ctor(Deque_##t *ap, bool (*compFunc)(const t &o1, const t &o2))	\
 	{																					\
@@ -209,6 +247,7 @@
 		ap->begin = &Deque_##t##_begin;													\
 		ap->end = &Deque_##t##_end;														\
 		ap->clear = &Deque_##t##_clear;													\
+		ap->sort = &Deque_##t##_sort;													\
 	}																					\
 
 #endif

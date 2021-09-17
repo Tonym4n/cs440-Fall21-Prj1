@@ -103,7 +103,7 @@ MyClass_print(const MyClass *o) {
     printf("%s\n", o->name);
 }
 
-Deque_DEFINE(MyClass)
+//Deque_DEFINE(MyClass)
 
 /*
  * Test for int.
@@ -295,7 +295,8 @@ main() {
         deq.clear(&deq);
 
         deq.dtor(&deq);
-/*    }
+
+    }
 
     // Test equality.  It is undefined behavior if the two deques were constructed with different
     // comparison functions.
@@ -417,7 +418,7 @@ main() {
         deq.dtor(&deq);
     }
 
-
+/*
     // Sorting Test 2
     {
        Deque_int deq1;
@@ -531,5 +532,5 @@ main() {
    // Print allocation info
    printf("%ld allocations totalling %ld bytes\n", alloc_call_count, total_bytes_allocated);
    int rv = fclose(devnull);
-   assert(rv == 0);*/}
+   assert(rv == 0);*///}
 }

@@ -271,7 +271,7 @@ main() {
         deq.pop_back(&deq);
         assert(deq.front(&deq) == 0);
         assert(deq.back(&deq) == 2);
-/*
+
         assert(deq.size(&deq) == 3);
 
         for (Deque_int_Iterator it = deq.begin(&deq);
@@ -291,7 +291,7 @@ main() {
         for (size_t i = 0; i < 3; i++) {
             printf("%d: %d\n", int(i), deq.at(&deq, i));
         }
-
+/*
         deq.clear(&deq);
 
         deq.dtor(&deq);

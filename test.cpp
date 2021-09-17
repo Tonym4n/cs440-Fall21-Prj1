@@ -291,11 +291,11 @@ main() {
         for (size_t i = 0; i < 3; i++) {
             printf("%d: %d\n", int(i), deq.at(&deq, i));
         }
-/*
+
         deq.clear(&deq);
 
         deq.dtor(&deq);
-    }
+/*    }
 
     // Test equality.  It is undefined behavior if the two deques were constructed with different
     // comparison functions.

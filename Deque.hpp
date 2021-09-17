@@ -30,6 +30,7 @@
 		void (*push_back)(Deque_##t *, t);										\
 		void (*pop_front)(Deque_##t *);											\
 		void (*pop_back)(Deque_##t *);											\
+		void (*clear)(Deque_##t *);												\
 																				\
 		Deque_##t##_Iterator (*begin)(Deque_##t *);								\
 		Deque_##t##_Iterator (*end)(Deque_##t *);								\
@@ -39,10 +40,6 @@
 		if(ap->frontIndex < ap->backIndex)										\
 			i = -i;																\
 		return ap->data[(i + ap->frontIndex + ap->capacity) % ap->capacity];	\
-	}																			\
-	void Deque_##t##_dtor(Deque_##t *ap)										\
-	{																			\
-		free(ap);																\
 	}																			\
 	size_t Deque_##t##_size(Deque_##t *ap)										\
 	{																			\
@@ -151,6 +148,14 @@
 			ap->s--;															\
 		}																		\
 	}																			\
+	void Deque_##t##_clear(Deque_##t *ap)										\
+	{																			\
+		free(ap->data);															\
+	}																			\
+	void Deque_##t##_dtor(Deque_##t *ap)										\
+	{																			\
+		/*???*/																	\
+	}																			\
 	void Deque_##t##_Iterator_inc(Deque_##t##_Iterator *itp)					\
 	{																			\
 		itp->counter++;															\
@@ -203,6 +208,7 @@
 		ap->pop_back = &Deque_##t##_pop_back;											\
 		ap->begin = &Deque_##t##_begin;													\
 		ap->end = &Deque_##t##_end;														\
+		ap->clear = &Deque_##t##_clear;													\
 	}																					\
 
 #endif

@@ -6,8 +6,7 @@
 	struct Deque_##t##_Iterator													\
 	{																			\
 		Deque_##t *ap;															\
-		int counter = 0;														\
-		bool begin = true;														\
+		int counter = -1;														\
 		void (*inc)(Deque_##t##_Iterator *);									\
 		void (*dec)(Deque_##t##_Iterator *);									\
 		t (*deref)(Deque_##t##_Iterator *);										\
@@ -24,7 +23,7 @@
 		bool (*empty)(Deque_##t *);												\
 		bool (*full)(Deque_##t *);												\
 		char const type_name[sizeof("Deque_"#t)] = "Deque_"#t;					\
-		int frontIndex = 0, backIndex = 0;										\
+		int frontIndex = -1, backIndex = -1;									\
 		t (*front)(Deque_##t *);												\
 		t (*back)(Deque_##t *);													\
 		void (*push_front)(Deque_##t *, t);										\
@@ -37,7 +36,9 @@
 	};																			\
 	t &Deque_##t##_at(Deque_##t *ap, int i)										\
 	{																			\
-		return ap->data[i];														\
+		if(ap->frontIndex < ap->backIndex)										\
+			i = -i;																\
+		return ap->data[(i + ap->frontIndex + ap->capacity) % ap->capacity];	\
 	}																			\
 	void Deque_##t##_dtor(Deque_##t *ap)										\
 	{																			\
@@ -66,7 +67,7 @@
 			printf("Empty deque\n");											\
 			abort();															\
 		}																		\
-		return ap->at(ap, ap->frontIndex);										\
+		return ap->at(ap, 0);													\
 	}																			\
 	t Deque_##t##_back(Deque_##t *ap)											\
 	{																			\
@@ -75,12 +76,13 @@
 			printf("Empty deque\n");											\
 			abort();															\
 		}																		\
-		return ap->at(ap, ap->backIndex);										\
+		return ap->at(ap, ap->s - 1);											\
 	}																			\
 	void Deque_##t##_push_front(Deque_##t *ap, t item)							\
 	{																			\
 		if(ap->empty(ap))														\
 		{																		\
+			ap->frontIndex = ap->backIndex = 0;									\
 			ap->at(ap, 0) = item;												\
 			ap->s++;															\
 			return;																\
@@ -91,12 +93,9 @@
 			t *tempData = (t *)realloc(ap->data, sizeof(t) * ap->capacity);		\
 			ap->data = tempData;												\
 		}																		\
-		else																	\
-		{																		\
-			ap->frontIndex = (ap->frontIndex + 1) % ap->capacity;				\
-			ap->at(ap, ap->frontIndex) = item;									\
-			ap->s++;															\
-		}																		\
+		ap->frontIndex = (ap->frontIndex + 1) % ap->capacity;					\
+		ap->s++;																\
+		ap->at(ap, 0) = item;													\
 	}																			\
 	void Deque_##t##_push_back(Deque_##t *ap, t item)							\
 	{																			\
@@ -112,12 +111,9 @@
 			t *tempData = (t *)realloc(ap->data, sizeof(t) * ap->capacity);		\
 			ap->data = tempData;												\
 		}																		\
-		else																	\
-		{																		\
-			ap->backIndex = (ap->backIndex - 1 + ap->capacity) % ap->capacity;	\
-			ap->at(ap, ap->backIndex) = item;									\
-			ap->s++;															\
-		}																		\
+		ap->backIndex = (ap->backIndex - 1 + ap->capacity) % ap->capacity;		\
+		ap->s++;																\
+		ap->at(ap, ap->s - 1) = item;											\
 	}																			\
 	void Deque_##t##_pop_front(Deque_##t *ap)									\
 	{																			\
@@ -126,9 +122,9 @@
 			printf("Empty deque\n");											\
 			abort();															\
 		}																		\
-		else if(ap->frontIndex == ap->backIndex)								\
+		else if(ap->size(ap) == 1)												\
 		{																		\
-			ap->frontIndex = ap->backIndex = 0;									\
+			ap->frontIndex = ap->backIndex = -1;								\
 			ap->s--;															\
 		}																		\
 		else																	\
@@ -144,9 +140,9 @@
 			printf("Empty deque\n");											\
 			abort();															\
 		}																		\
-		else if(ap->frontIndex == ap->backIndex)								\
+		else if(ap->size(ap) == 1)												\
 		{																		\
-			ap->frontIndex = ap->backIndex = 0;									\
+			ap->frontIndex = ap->backIndex = -1;								\
 			ap->s--;															\
 		}																		\
 		else																	\
@@ -157,40 +153,21 @@
 	}																			\
 	void Deque_##t##_Iterator_inc(Deque_##t##_Iterator *itp)					\
 	{																			\
-		if(itp->begin)															\
-		{																		\
-			if(itp->ap->frontIndex < itp->ap->backIndex)						\
-				itp->counter--;													\
-		}																		\
-		else																	\
-			itp->counter++;														\
+		itp->counter++;															\
 	}																			\
 	void Deque_##t##_Iterator_dec(Deque_##t##_Iterator *itp)					\
 	{																			\
-		if(itp->begin)															\
-		{																		\
-			if(itp->ap->frontIndex < itp->ap->backIndex)						\
-				itp->counter++;													\
-		}																		\
-		else																	\
-			itp->counter--;														\
+		itp->counter--;															\
 	}																			\
 	t Deque_##t##_Iterator_deref(Deque_##t##_Iterator *itp)						\
 	{																			\
-		if(!itp->begin)															\
-		{																		\
-			if(itp->ap->frontIndex < itp->ap->backIndex)						\
-				itp->counter = -itp->counter;									\
-		}																		\
-		int actualIndex = (itp->counter + itp->ap->frontIndex + itp->ap->capacity) % itp->ap->capacity;	\
-		return itp->ap->at(itp->ap, actualIndex);								\
+		return itp->ap->at(itp->ap, itp->counter);								\
 	}																			\
 	Deque_##t##_Iterator Deque_##t##_begin(Deque_##t *ap)						\
 	{																			\
 		Deque_##t##_Iterator it;												\
 		it.ap = ap;																\
 		it.counter = 0;															\
-		it.begin = true;														\
 		it.inc = &Deque_##t##_Iterator_inc;										\
 		it.dec = &Deque_##t##_Iterator_dec;										\
 		it.deref = &Deque_##t##_Iterator_deref;									\
@@ -200,8 +177,7 @@
 	{																			\
 		Deque_##t##_Iterator it;												\
 		it.ap = ap;																\
-		it.counter = ap->size(ap);												\
-		it.begin = false;														\
+		it.counter = ap->s;														\
 		return it;																\
 	}																			\
 	bool Deque_##t##_Iterator_equal(Deque_##t##_Iterator first, Deque_##t##_Iterator second)	\

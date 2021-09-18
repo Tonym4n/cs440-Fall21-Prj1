@@ -3,7 +3,7 @@ CXXFLAGS :=	-g -Wall -std=c++17
 VPATH :=	.
 
 test:		test.o
-			$(CXX) $^ -o $@
+			$(CXX) -ldl $^ -o $@
 
 template:	template.cpp
 			$(CXX) $^ -o $@

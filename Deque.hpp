@@ -1,7 +1,8 @@
 #ifndef DEQUE_HPP
 #define DEQUE_HPP
 
-#include <algorithm>
+#include <string.h>
+
 
 #define Deque_DEFINE(t)															\
 	struct Deque_##t;															\
@@ -26,7 +27,6 @@
 		bool (*full)(Deque_##t *);												\
 		char const type_name[sizeof("Deque_"#t)] = "Deque_"#t;					\
 		int frontIndex = -1, backIndex = -1;									\
-		int numFrontPushes = 0, numBackPushes = 0;								\
 		t (*front)(Deque_##t *);												\
 		t (*back)(Deque_##t *);													\
 		void (*push_front)(Deque_##t *, t);										\
@@ -41,9 +41,7 @@
 	};																			\
 	t &Deque_##t##_at(Deque_##t *ap, int i)										\
 	{																			\
-		if(ap->numFrontPushes > ap->numBackPushes)								\
-			i = -i;																\
-		return ap->data[(i + ap->frontIndex + ap->capacity) % ap->capacity];	\
+		return ap->data[(i + ap->frontIndex) % ap->capacity];					\
 	}																			\
 	size_t Deque_##t##_size(Deque_##t *ap)										\
 	{																			\
@@ -81,7 +79,6 @@
 	}																			\
 	void Deque_##t##_push_front(Deque_##t *ap, t item)							\
 	{																			\
-		ap->numFrontPushes++;													\
 		if(ap->empty(ap))														\
 		{																		\
 			ap->frontIndex = ap->backIndex = 0;									\
@@ -92,16 +89,31 @@
 		else if(ap->full(ap))													\
 		{																		\
 			ap->capacity *= 2;													\
-			t *tempData = (t *)realloc(ap->data, sizeof(t) * ap->capacity);		\
+			t *tempData = (t *)malloc(sizeof(t) * ap->capacity);				\
+			int i = ap->frontIndex, j = 0;										\
+			while(i != ap->backIndex)											\
+			{																	\
+				tempData[j] = ap->data[i];										\
+				i = (i + 1) % ap->s;											\
+				j++;															\
+			}																	\
+			tempData[j] = ap->data[i];											\
+			ap->frontIndex = 0;													\
+			ap->backIndex = ap->s - 1;											\
+			free(ap->data);														\
 			ap->data = tempData;												\
 		}																		\
-		ap->frontIndex = (ap->frontIndex + 1) % ap->capacity;					\
-		ap->s++;																\
+		ap->frontIndex = (ap->frontIndex - 1 + ap->capacity) % ap->capacity;	\
 		ap->at(ap, 0) = item;													\
+		ap->s++;																\
+/*puts("\nPUSH");\
+for (size_t i = 0; i < ap->capacity; i++) {\
+printf("%d ", ap->data[i]);\
+}\
+puts("");*/\
 	}																			\
 	void Deque_##t##_push_back(Deque_##t *ap, t item)							\
 	{																			\
-		ap->numBackPushes++;													\
 		if(ap->empty(ap))														\
 		{																		\
 			ap->frontIndex = ap->backIndex = 0;									\
@@ -112,16 +124,26 @@
 		else if(ap->full(ap))													\
 		{																		\
 			ap->capacity *= 2;													\
-			t *tempData = (t *)realloc(ap->data, sizeof(t) * ap->capacity);		\
+			t *tempData = (t *)malloc(sizeof(t) * ap->capacity);				\
+			int i = ap->frontIndex, j = 0;										\
+			while(i != ap->backIndex)											\
+			{																	\
+				tempData[j] = ap->data[i];										\
+				i = (i + 1) % ap->s;											\
+				j++;															\
+			}																	\
+			tempData[j] = ap->data[i];											\
+			ap->frontIndex = 0;													\
+			ap->backIndex = ap->s - 1;											\
+			free(ap->data);														\
 			ap->data = tempData;												\
 		}																		\
-		ap->backIndex = (ap->backIndex - 1 + ap->capacity) % ap->capacity;		\
+		ap->backIndex = (ap->backIndex + 1) % ap->capacity;						\
+		ap->at(ap, ap->backIndex) = item;										\
 		ap->s++;																\
-		ap->at(ap, ap->s - 1) = item;											\
 	}																			\
 	void Deque_##t##_pop_front(Deque_##t *ap)									\
 	{																			\
-		ap->numFrontPushes--;													\
 		if(ap->empty(ap))														\
 		{																		\
 			printf("Empty deque\n");											\
@@ -134,13 +156,12 @@
 		}																		\
 		else																	\
 		{																		\
-			ap->frontIndex = (ap->frontIndex - 1 + ap->capacity) % ap->capacity;\
+			ap->frontIndex = (ap->frontIndex + 1) % ap->capacity;				\
 			ap->s--;															\
 		}																		\
 	}																			\
 	void Deque_##t##_pop_back(Deque_##t *ap)									\
 	{																			\
-		ap->numBackPushes--;													\
 		if(ap->empty(ap))														\
 		{																		\
 			printf("Empty deque\n");											\
@@ -153,7 +174,7 @@
 		}																		\
 		else																	\
 		{																		\
-			ap->backIndex = (ap->backIndex + 1) % ap->capacity;					\
+			ap->backIndex = (ap->backIndex - 1 + ap->capacity) % ap->capacity;	\
 			ap->s--;															\
 		}																		\
 	}																			\
@@ -162,7 +183,6 @@
 		ap->s = 0;																\
 		ap->capacity = 10;														\
 		ap->frontIndex = ap->backIndex = -1;									\
-		ap->numFrontPushes = ap->numBackPushes = 0;								\
 	}																			\
 	void Deque_##t##_dtor(Deque_##t *ap)										\
 	{																			\
@@ -238,10 +258,6 @@
 		return (one.capacity == two.capacity) && (one.s == two.s) &&			\
 				(strcmp(one.type_name, two.type_name) == 0);					\
 	}																			\
-	bool Deque_##t##_equal(Deque_##t one, Deque_##t two)						\
-	{
-		
-	}
 	void Deque_##t##_ctor(Deque_##t *ap, bool (*compFunc)(const t &o1, const t &o2))	\
 	{																					\
 		ap->data = (t *)malloc(sizeof(t) * ap->capacity);								\
@@ -262,5 +278,16 @@
 		ap->clear = &Deque_##t##_clear;													\
 		ap->sort = &Deque_##t##_sort;													\
 	}																					\
+
+
+#define MYCLASS_EQUAL															\
+	bool operator==(const MyClass one, const MyClass two)						\
+	{																			\
+		return (one.id == two.id) && (strcmp(one.name, two.name) == 0);			\
+	}																			\
+	bool operator!=(const MyClass one, const MyClass two)						\
+	{																			\
+		return !(one == two);													\
+	}																			\
 
 #endif

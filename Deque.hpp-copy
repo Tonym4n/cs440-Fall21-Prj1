@@ -1,6 +1,8 @@
 #ifndef DEQUE_HPP
 #define DEQUE_HPP
 
+#include <string.h>
+
 
 #define Deque_DEFINE(t)																	\
 	struct Deque_##t;																	\
@@ -10,7 +12,7 @@
 		int counter = -1;																\
 		void (*inc)(Deque_##t##_Iterator *);											\
 		void (*dec)(Deque_##t##_Iterator *);											\
-		t &(*deref)(Deque_##t##_Iterator *);												\
+		t (*deref)(Deque_##t##_Iterator *);												\
 	};																					\
 	struct Deque_##t 																	\
 	{																					\
@@ -25,8 +27,8 @@
 		bool (*full)(Deque_##t *);														\
 		char const type_name[sizeof("Deque_"#t)] = "Deque_"#t;							\
 		int frontIndex = -1, backIndex = -1;											\
-		t &(*front)(Deque_##t *);														\
-		t &(*back)(Deque_##t *);															\
+		t (*front)(Deque_##t *);														\
+		t (*back)(Deque_##t *);															\
 		void (*push_front)(Deque_##t *, t);												\
 		void (*push_back)(Deque_##t *, t);												\
 		void (*pop_front)(Deque_##t *);													\
@@ -55,7 +57,7 @@
 			return true;																\
 		return false;																	\
 	}																					\
-	t &Deque_##t##_front(Deque_##t *ap)													\
+	t Deque_##t##_front(Deque_##t *ap)													\
 	{																					\
 		if(ap->empty(ap))																\
 		{																				\
@@ -64,7 +66,7 @@
 		}																				\
 		return ap->at(ap, 0);															\
 	}																					\
-	t &Deque_##t##_back(Deque_##t *ap)													\
+	t Deque_##t##_back(Deque_##t *ap)													\
 	{																					\
 		if(ap->empty(ap))																\
 		{																				\
@@ -189,7 +191,7 @@
 		if(itp->counter <= itp->ap->s)													\
 			itp->counter--;																\
 	}																					\
-	t &Deque_##t##_Iterator_deref(Deque_##t##_Iterator *itp)								\
+	t Deque_##t##_Iterator_deref(Deque_##t##_Iterator *itp)								\
 	{																					\
 		if(itp->counter >= itp->ap->s)													\
 		{																				\
@@ -221,7 +223,9 @@
 	}																					\
 	bool Deque_##t##_Iterator_equal(Deque_##t##_Iterator first, Deque_##t##_Iterator second)	\
 	{																					\
-		return (first.counter == second.counter) && (first.ap == second.ap);			\
+		if(first.counter == second.counter)												\
+			return true;																\
+		return false;																	\
 	}																					\
 	void Deque_##t##_sort(Deque_##t *ap, Deque_##t##_Iterator start, Deque_##t##_Iterator finish)						\
 	{																													\
@@ -241,11 +245,10 @@
 	bool Deque_##t##_equal(Deque_##t one, Deque_##t two)								\
 	{																					\
 		for(auto itOne = one.begin(&one), itTwo = two.begin(&two);						\
-			!Deque_##t##_Iterator_equal(itOne, one.end(&one)) && !Deque_##t##_Iterator_equal(itTwo, two.end(&two));  \
+			!Deque_##t##_Iterator_equal(itOne, one.end(&one)) && !Deque_##t##_Iterator_equal(itTwo, two.end(&two));	\
 			itOne.inc(&itOne), itTwo.inc(&itTwo))										\
 		{																				\
-			if(one.compFunc( itOne.deref(&itOne), itTwo.deref(&itTwo) ) != 				\
-				two.compFunc( itTwo.deref(&itTwo), itOne.deref(&itOne) ) ) 				\
+			if(itOne.deref(&itOne) != itTwo.deref(&itTwo))								\
 				return false;															\
 		}																				\
 		return (one.capacity == two.capacity) && (one.s == two.s) &&					\
@@ -272,5 +275,15 @@
 		ap->sort = &Deque_##t##_sort;													\
 	}																					\
 
+
+#define MYCLASS_EQUAL																	\
+	bool operator==(const MyClass one, const MyClass two)								\
+	{																					\
+		return (one.id == two.id) && (strcmp(one.name, two.name) == 0);					\
+	}																					\
+	bool operator!=(const MyClass one, const MyClass two)								\
+	{																					\
+		return !(one == two);															\
+	}																					\
 
 #endif

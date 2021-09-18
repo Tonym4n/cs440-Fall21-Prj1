@@ -103,7 +103,7 @@ MyClass_print(const MyClass *o) {
     printf("%s\n", o->name);
 }
 
-//Deque_DEFINE(MyClass)
+Deque_DEFINE(MyClass)
 
 /*
  * Test for int.
@@ -120,7 +120,6 @@ int
 main() {
     FILE *devnull = fopen("/dev/null", "w");
     assert(devnull != 0);
-    /*
     {
         Deque_MyClass deq;
         Deque_MyClass_ctor(&deq, MyClass_less_by_id);
@@ -241,7 +240,6 @@ main() {
         }
 
     }
-    */
 
     // Test that it can handle other types.  Tests are the same, more or less.
     {
@@ -294,34 +292,7 @@ main() {
 
         deq.clear(&deq);
 
-/*
-//Deque_int deq;
-Deque_int_ctor(&deq, int_less);
-for(int i = 55; i >= 0; i--)
-    deq.push_back(&deq, i+100);
-deq.sort(&deq, deq.begin(&deq), deq.end(&deq));
-
-puts("\nDATA[]");
-for (size_t i = 0; i < deq.size(&deq); i++) {
-    printf("%d ", deq.data[i]);
-}
-puts("");
-
-puts("\nAT");
-for (size_t i = 0; i < deq.size(&deq); i++) {
-    printf("%d ", deq.at(&deq, i));
-}
-puts("");
-
-puts("\nITER");
-for (Deque_int_Iterator it = deq.begin(&deq);
- !Deque_int_Iterator_equal(it, deq.end(&deq)); it.inc(&it)) {
-    printf("%d ", it.deref(&it));
-}
-puts("");
-//*/
         deq.dtor(&deq);
-
     }
 
     // Test equality.  It is undefined behavior if the two deques were constructed with different
@@ -444,7 +415,7 @@ puts("");
         deq.dtor(&deq);
     }
 
-/*
+
     // Sorting Test 2
     {
        Deque_int deq1;
@@ -558,5 +529,5 @@ puts("");
    // Print allocation info
    printf("%ld allocations totalling %ld bytes\n", alloc_call_count, total_bytes_allocated);
    int rv = fclose(devnull);
-   assert(rv == 0);*///}
+   assert(rv == 0);
 }

@@ -245,7 +245,7 @@ main() {
 
     // Test that it can handle other types.  Tests are the same, more or less.
     {
-        Deque_int deq;
+/*        Deque_int deq;
         Deque_int_ctor(&deq, int_less);
 
         assert(deq.size(&deq) == 0);
@@ -292,9 +292,31 @@ main() {
             printf("%d: %d\n", int(i), deq.at(&deq, i));
         }
 
-        deq.clear(&deq);
+        deq.clear(&deq);*/
 
-        deq.dtor(&deq);
+/*Deque_int deq;
+Deque_int_ctor(&deq, int_less);
+for(int i = 24; i >= 0; i--)
+    deq.push_front(&deq, i+100);
+deq.sort(&deq, deq.begin(&deq), deq.end(&deq));
+
+puts("\nDATA[]");
+for (size_t i = 0; i < deq.size(&deq); i++) {
+    printf("%d ", deq.data[i]);
+}
+
+puts("\nAT");
+for (size_t i = 0; i < deq.size(&deq); i++) {
+    printf("%d ", deq.at(&deq, i));
+}
+
+puts("\nITER");
+for (Deque_int_Iterator it = deq.begin(&deq);
+ !Deque_int_Iterator_equal(it, deq.end(&deq)); it.inc(&it)) {
+    printf("%d ", it.deref(&it));
+}
+
+        deq.dtor(&deq);*/
 
     }
 

@@ -26,6 +26,7 @@
 		bool (*full)(Deque_##t *);												\
 		char const type_name[sizeof("Deque_"#t)] = "Deque_"#t;					\
 		int frontIndex = -1, backIndex = -1;									\
+		int numFrontPushes = 0, numBackPushes = 0;								\
 		t (*front)(Deque_##t *);												\
 		t (*back)(Deque_##t *);													\
 		void (*push_front)(Deque_##t *, t);										\
@@ -40,7 +41,7 @@
 	};																			\
 	t &Deque_##t##_at(Deque_##t *ap, int i)										\
 	{																			\
-		if(ap->frontIndex < ap->backIndex)										\
+		if(ap->numFrontPushes > ap->numBackPushes)								\
 			i = -i;																\
 		return ap->data[(i + ap->frontIndex + ap->capacity) % ap->capacity];	\
 	}																			\
@@ -80,6 +81,7 @@
 	}																			\
 	void Deque_##t##_push_front(Deque_##t *ap, t item)							\
 	{																			\
+		ap->numFrontPushes++;													\
 		if(ap->empty(ap))														\
 		{																		\
 			ap->frontIndex = ap->backIndex = 0;									\
@@ -99,8 +101,10 @@
 	}																			\
 	void Deque_##t##_push_back(Deque_##t *ap, t item)							\
 	{																			\
+		ap->numBackPushes++;													\
 		if(ap->empty(ap))														\
 		{																		\
+			ap->frontIndex = ap->backIndex = 0;									\
 			ap->at(ap, 0) = item;												\
 			ap->s++;															\
 			return;																\
@@ -117,6 +121,7 @@
 	}																			\
 	void Deque_##t##_pop_front(Deque_##t *ap)									\
 	{																			\
+		ap->numFrontPushes--;													\
 		if(ap->empty(ap))														\
 		{																		\
 			printf("Empty deque\n");											\
@@ -135,6 +140,7 @@
 	}																			\
 	void Deque_##t##_pop_back(Deque_##t *ap)									\
 	{																			\
+		ap->numBackPushes--;													\
 		if(ap->empty(ap))														\
 		{																		\
 			printf("Empty deque\n");											\
@@ -156,6 +162,7 @@
 		ap->s = 0;																\
 		ap->capacity = 10;														\
 		ap->frontIndex = ap->backIndex = -1;									\
+		ap->numFrontPushes = ap->numBackPushes = 0;								\
 	}																			\
 	void Deque_##t##_dtor(Deque_##t *ap)										\
 	{																			\
@@ -204,19 +211,21 @@
 			return true;														\
 		return false;															\
 	}																			\
-	void Deque_##t##_sort(Deque_##t *ap, Deque_##t##_Iterator start, Deque_##t##_Iterator finish)					\
-	{																												\
-		start.inc(&start);																							\
-		for(auto it = start; !Deque_##t##_Iterator_equal(it, finish); it.inc(&it))									\
-		{																											\
-			Deque_##t##_Iterator itMinusOne = it;																	\
-			itMinusOne.dec(&itMinusOne);																			\
-			if(ap->compFunc(itMinusOne.deref(&itMinusOne), it.deref(&it)) == false)									\
-			{																										\
-				std::swap(itMinusOne.ap->at(itMinusOne.ap, itMinusOne.counter) , it.ap->at(it.ap, it.counter));		\
-			}																										\
-		}																											\
-	}																												\
+	void Deque_##t##_sort(Deque_##t *ap, Deque_##t##_Iterator start, Deque_##t##_Iterator finish)						\
+	{																													\
+		for(auto i = start; !Deque_##t##_Iterator_equal(i, finish); i.inc(&i))											\
+		{																												\
+			for(auto j = i; !Deque_##t##_Iterator_equal(j, start); j.dec(&j))											\
+			{																											\
+				Deque_##t##_Iterator jMinusOne = j;																		\
+				jMinusOne.dec(&jMinusOne);																				\
+				if(ap->compFunc(j.deref(&j), jMinusOne.deref(&jMinusOne)))												\
+				{																										\
+					std::swap(j.ap->at(j.ap, j.counter) , jMinusOne.ap->at(jMinusOne.ap, jMinusOne.counter));			\
+				}																										\
+			}																											\
+		}																												\
+	}																													\
 	bool Deque_##t##_equal(Deque_##t one, Deque_##t two)						\
 	{																			\
 		for(auto itOne = one.begin(&one), itTwo = two.begin(&two);				\
@@ -229,6 +238,10 @@
 		return (one.capacity == two.capacity) && (one.s == two.s) &&			\
 				(strcmp(one.type_name, two.type_name) == 0);					\
 	}																			\
+	bool Deque_##t##_equal(Deque_##t one, Deque_##t two)						\
+	{
+		
+	}
 	void Deque_##t##_ctor(Deque_##t *ap, bool (*compFunc)(const t &o1, const t &o2))	\
 	{																					\
 		ap->data = (t *)malloc(sizeof(t) * ap->capacity);								\

@@ -106,3 +106,7 @@ Mary
 2250755 push_backs, 2249612 push_fronts, 2256641 pop_backs, 2253709 pop_fronts, 17 size
 Sum of all integers between 0 and 10000000 calculated using a deque is 49999995000000.
 99 allocations totalling 94949904 bytes
+
+real	0m5.537s
+user	0m5.504s
+sys	0m0.028s

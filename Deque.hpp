@@ -223,35 +223,35 @@
 	{																							\
 		return (first.counter == second.counter) && (first.ap == second.ap);					\
 	}																							\
-	int partition(t *data, int low, int high, bool (*cmp)(const t&, const t&))			\
+	int partition(Deque_##t *ap, int low, int high)										\
 	{																					\
-		t pivot = data[high];															\
+		t pivot = ap->at(ap, high);														\
 		int i = low;																	\
 		for(int j = low; j < high; j++)													\
 		{																				\
-			if(cmp(data[j], pivot))														\
+			if(ap->compFunc(ap->at(ap, j), pivot))										\
 			{																			\
-				std::swap(data[j], data[i]);											\
+				std::swap(ap->at(ap, j), ap->at(ap, i));								\
 				i++;																	\
 			}																			\
 		}																				\
-		std::swap(data[i], data[high]);													\
+		std::swap(ap->at(ap, i), ap->at(ap, high));										\
 		return i;																		\
 	}																					\
-	void Deque_##t##_qsort(t *data, int low, int high, bool (*cmp)(const t&, const t&))	\
+	void Deque_##t##_qsort(Deque_##t *ap, int low, int high)							\
 	{																					\
 		if(low < high)																	\
 		{																				\
-			int p = partition(data, low, high, cmp);									\
+			int p = partition(ap, low, high);											\
 			if(p > 0)																	\
-				Deque_##t##_qsort(data, low, p - 1, cmp);								\
-			Deque_##t##_qsort(data, p + 1, high, cmp);									\
+				Deque_##t##_qsort(ap, low, p - 1);										\
+			Deque_##t##_qsort(ap, p + 1, high);											\
 		}																				\
 	}																					\
 	void Deque_##t##_sort(Deque_##t *ap, Deque_##t##_Iterator start, Deque_##t##_Iterator finish)	\
 	{																								\
 		finish.dec(&finish);																		\
-		Deque_##t##_qsort(ap->data, start.counter, finish.counter, ap->compFunc);					\
+		Deque_##t##_qsort(ap, start.counter, finish.counter);										\
 /*																														\
 		for(auto i = start; !Deque_##t##_Iterator_equal(i, finish); i.inc(&i))											\
 		{																												\

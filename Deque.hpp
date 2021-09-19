@@ -10,7 +10,7 @@
 		int counter = -1;																\
 		void (*inc)(Deque_##t##_Iterator *);											\
 		void (*dec)(Deque_##t##_Iterator *);											\
-		t &(*deref)(Deque_##t##_Iterator *);												\
+		t &(*deref)(Deque_##t##_Iterator *);											\
 	};																					\
 	struct Deque_##t 																	\
 	{																					\
@@ -26,7 +26,7 @@
 		char const type_name[sizeof("Deque_"#t)] = "Deque_"#t;							\
 		int frontIndex = -1, backIndex = -1;											\
 		t &(*front)(Deque_##t *);														\
-		t &(*back)(Deque_##t *);															\
+		t &(*back)(Deque_##t *);														\
 		void (*push_front)(Deque_##t *, t);												\
 		void (*push_back)(Deque_##t *, t);												\
 		void (*pop_front)(Deque_##t *);													\
@@ -189,7 +189,7 @@
 		if(itp->counter <= itp->ap->s)													\
 			itp->counter--;																\
 	}																					\
-	t &Deque_##t##_Iterator_deref(Deque_##t##_Iterator *itp)								\
+	t &Deque_##t##_Iterator_deref(Deque_##t##_Iterator *itp)							\
 	{																					\
 		if(itp->counter >= itp->ap->s)													\
 		{																				\
@@ -220,11 +220,39 @@
 		return it;																		\
 	}																					\
 	bool Deque_##t##_Iterator_equal(Deque_##t##_Iterator first, Deque_##t##_Iterator second)	\
+	{																							\
+		return (first.counter == second.counter) && (first.ap == second.ap);					\
+	}																							\
+	int partition(t *data, int low, int high, bool (*cmp)(const t&, const t&))			\
 	{																					\
-		return (first.counter == second.counter) && (first.ap == second.ap);			\
+		t pivot = data[high];															\
+		int i = low;																	\
+		for(int j = low; j < high; j++)													\
+		{																				\
+			if(cmp(data[j], pivot))														\
+			{																			\
+				std::swap(data[j], data[i]);											\
+				i++;																	\
+			}																			\
+		}																				\
+		std::swap(data[i], data[high]);													\
+		return i;																		\
 	}																					\
-	void Deque_##t##_sort(Deque_##t *ap, Deque_##t##_Iterator start, Deque_##t##_Iterator finish)						\
-	{																													\
+	void Deque_##t##_qsort(t *data, int low, int high, bool (*cmp)(const t&, const t&))	\
+	{																					\
+		if(low < high)																	\
+		{																				\
+			int p = partition(data, low, high, cmp);									\
+			if(p > 0)																	\
+				Deque_##t##_qsort(data, low, p - 1, cmp);								\
+			Deque_##t##_qsort(data, p + 1, high, cmp);									\
+		}																				\
+	}																					\
+	void Deque_##t##_sort(Deque_##t *ap, Deque_##t##_Iterator start, Deque_##t##_Iterator finish)	\
+	{																								\
+		finish.dec(&finish);																		\
+		Deque_##t##_qsort(ap->data, start.counter, finish.counter, ap->compFunc);					\
+/*																														\
 		for(auto i = start; !Deque_##t##_Iterator_equal(i, finish); i.inc(&i))											\
 		{																												\
 			for(auto j = i; !Deque_##t##_Iterator_equal(j, start); j.dec(&j))											\
@@ -237,11 +265,13 @@
 				}																										\
 			}																											\
 		}																												\
-	}																													\
+*/																									\
+	}																								\
 	bool Deque_##t##_equal(Deque_##t one, Deque_##t two)								\
 	{																					\
 		for(auto itOne = one.begin(&one), itTwo = two.begin(&two);						\
-			!Deque_##t##_Iterator_equal(itOne, one.end(&one)) && !Deque_##t##_Iterator_equal(itTwo, two.end(&two));  \
+			!Deque_##t##_Iterator_equal(itOne, one.end(&one)) && 						\
+			!Deque_##t##_Iterator_equal(itTwo, two.end(&two));  						\
 			itOne.inc(&itOne), itTwo.inc(&itTwo))										\
 		{																				\
 			if(one.compFunc( itOne.deref(&itOne), itTwo.deref(&itTwo) ) != 				\
@@ -249,7 +279,8 @@
 				return false;															\
 		}																				\
 		return (one.capacity == two.capacity) && (one.s == two.s) &&					\
-				(strcmp(one.type_name, two.type_name) == 0);							\
+				(strcmp(one.type_name, two.type_name) == 0) && 							\
+				(one.compFunc == two.compFunc);											\
 	}																					\
 	void Deque_##t##_ctor(Deque_##t *ap, bool (*compFunc)(const t &o1, const t &o2))	\
 	{																					\
